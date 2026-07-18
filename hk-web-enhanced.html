@@ -1,0 +1,1161 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <base href="./" />
+    <meta charset="utf-8" />
+    <title>Hollow Knight</title>
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hk-web-test@main/Build/hktruffled.loader.js"
+      as="script"
+      fetchpriority="high"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hk-web-test@main/Build/hktruffled.framework.js"
+      as="script"
+      crossorigin
+    />
+    <style>
+      :root {
+        --bg: #05080f;
+        --bg2: #101a2a;
+        --card: rgba(10, 15, 25, 0.82);
+        --line: rgba(180, 210, 255, 0.14);
+        --soft: rgba(255, 255, 255, 0.08);
+        --text: #f5f7ff;
+        --muted: #abb7cf;
+        --accent: #8edcff;
+        --accent2: #7ea9ff;
+        --good: #82f1c3;
+        --warn: #ffd286;
+        --bad: #ff9696;
+        --shadow: 0 22px 50px rgba(0, 0, 0, 0.42);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        color: var(--text);
+        font-family: "Bahnschrift", "Trebuchet MS", "Segoe UI", sans-serif;
+      }
+      body {
+        background: radial-gradient(
+            circle at top,
+            rgba(46, 82, 138, 0.42),
+            transparent 38%
+          ),
+          radial-gradient(
+            circle at 82% 10%,
+            rgba(120, 182, 255, 0.18),
+            transparent 24%
+          ),
+          linear-gradient(180deg, var(--bg2), var(--bg));
+        position: relative;
+      }
+      body:before,
+      body:after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+      }
+      body:before {
+        background: linear-gradient(
+            120deg,
+            rgba(255, 255, 255, 0.03),
+            transparent 25%,
+            transparent 75%,
+            rgba(255, 255, 255, 0.03)
+          ),
+          radial-gradient(
+            circle at center,
+            transparent 0,
+            rgba(0, 0, 0, 0.2) 72%,
+            rgba(0, 0, 0, 0.5) 100%
+          );
+        opacity: 0.9;
+      }
+      body:after {
+        background-image: linear-gradient(
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+          );
+        background-size: 32px 32px;
+        opacity: 0.08;
+      }
+      #unity-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        display: block;
+        background: #000;
+        z-index: 1;
+        contain: strict;
+        touch-action: none;
+      }
+      body.game-live {
+        background: #000;
+      }
+      body.game-live:before,
+      body.game-live:after {
+        display: none;
+      }
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        z-index: 10000;
+        background: linear-gradient(
+          180deg,
+          rgba(6, 9, 14, 0.7),
+          rgba(4, 6, 10, 0.93)
+        );
+        transition:
+          opacity 0.45s,
+          visibility 0.45s;
+      }
+      #loading-screen.hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .card {
+        width: min(640px, 100%);
+        padding: 32px 28px 28px;
+        border-radius: 28px;
+        background: linear-gradient(
+          180deg,
+          rgba(14, 20, 33, 0.92),
+          rgba(6, 8, 14, 0.96)
+        );
+        border: 1px solid var(--line);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
+        backdrop-filter: blur(16px);
+        position: relative;
+        overflow: hidden;
+      }
+      .card:before {
+        content: "";
+        position: absolute;
+        left: -12%;
+        top: -26%;
+        width: 240px;
+        height: 240px;
+        background: radial-gradient(
+          circle,
+          rgba(135, 220, 255, 0.2),
+          transparent 70%
+        );
+      }
+      h1 {
+        font-size: clamp(34px, 5vw, 54px);
+        line-height: 0.95;
+        letter-spacing: 0.03em;
+      }
+      .copy {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.55;
+        max-width: 44ch;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 24px 0 12px;
+      }
+      #loading-phase {
+        font-weight: 700;
+        font-size: 15px;
+      }
+      #loading-percent {
+        color: var(--accent);
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .track {
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+      #loading-bar {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, #81eefb, #7db4ff 52%, #fff);
+        box-shadow: 0 0 26px rgba(125, 180, 255, 0.4);
+        position: relative;
+        transition: width 0.16s;
+      }
+      #loading-bar:after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.5),
+          transparent
+        );
+        transform: translateX(-100%);
+        animation: sheen 1.6s linear infinite;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .stat {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .stat b {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .stat span {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      #loading-tip {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .hud {
+        position: fixed;
+        width: min(330px, calc(100vw - 28px));
+        padding: 16px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, var(--card), rgba(7, 10, 17, 0.92));
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+        z-index: 9998;
+        transition:
+          opacity 0.22s,
+          transform 0.22s,
+          visibility 0.22s;
+      }
+      .hud.hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(8px);
+      }
+      #fps-panel {
+        top: 18px;
+        left: 18px;
+        width: min(148px, calc(100vw - 28px));
+        padding: 12px;
+      }
+      #save-panel {
+        top: 18px;
+        right: 18px;
+        width: min(290px, calc(100vw - 28px));
+      }
+      #perf-panel {
+        left: 18px;
+        bottom: 18px;
+      }
+      .head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .head h2 {
+        font-size: 21px;
+        line-height: 1;
+        letter-spacing: 0.03em;
+      }
+      .hud p {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .hint {
+        margin-top: 12px;
+        font-size: 12px;
+      }
+      .fps-shell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 54px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: linear-gradient(
+          135deg,
+          rgba(117, 178, 255, 0.18),
+          rgba(92, 219, 255, 0.1)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        text-align: center;
+        overflow: hidden;
+      }
+      #fps-readout {
+        display: inline-block;
+        min-width: 6ch;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      button {
+        border: 0;
+        border-radius: 15px;
+        padding: 12px 14px;
+        color: var(--text);
+        cursor: pointer;
+        font:
+          700 14px/1 "Bahnschrift",
+          "Trebuchet MS",
+          "Segoe UI",
+          sans-serif;
+        background: linear-gradient(
+          135deg,
+          rgba(117, 178, 255, 0.27),
+          rgba(92, 219, 255, 0.18)
+        );
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          0 12px 22px rgba(0, 0, 0, 0.24);
+        transition:
+          transform 0.16s,
+          filter 0.16s;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.08);
+      }
+      .secondary {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1),
+          rgba(128, 166, 255, 0.16)
+        );
+      }
+      .slider {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 12px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      #scale-value {
+        color: var(--accent);
+      }
+      input[type="range"] {
+        width: 100%;
+        accent-color: #8fcfff;
+        cursor: pointer;
+      }
+      #toast {
+        position: fixed;
+        left: 50%;
+        bottom: 26px;
+        transform: translateX(-50%) translateY(10px);
+        max-width: min(540px, calc(100vw - 28px));
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: rgba(7, 10, 16, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.35);
+        font-size: 13px;
+        line-height: 1.3;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+        z-index: 9999;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      #mobile {
+        position: fixed;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-12px);
+        width: min(480px, calc(100vw - 28px));
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(12, 16, 24, 0.9);
+        border: 1px solid rgba(255, 150, 150, 0.22);
+        box-shadow: var(--shadow);
+        color: #ffd0d0;
+        font-size: 13px;
+        line-height: 1.45;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.22s,
+          transform 0.22s;
+        z-index: 10001;
+      }
+      #mobile.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      @keyframes sheen {
+        to {
+          transform: translateX(100%);
+        }
+      }
+      @media (max-width: 720px) {
+        .card {
+          padding: 24px;
+        }
+        .stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hk-web-test@main/sharedassets8.resource"
+      as="fetch"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hk-web-test@main/sharedassets127.resource"
+      as="fetch"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hk-web-test@main/sharedassets400.resource"
+      as="fetch"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hk-web-test@main/sharedassets410.resource"
+      as="fetch"
+      crossorigin
+    />
+    <div id="loading-screen">
+      <div class="card">
+        <h1>Hollow Knight</h1>
+        <p class="copy">
+          Preparing the game files, WebAssembly runtime, and browser save
+          systems before the game loads.
+        </p>
+        <div class="row">
+          <div id="loading-phase">Downloading build chunks...</div>
+          <div id="loading-percent">0%</div>
+        </div>
+        <div class="track"><div id="loading-bar"></div></div>
+        <div class="stats">
+          <div class="stat">
+            <b>Downloaded</b
+            ><span id="loading-downloaded">0.00 MB / 912.81 MB</span>
+          </div>
+          <div class="stat">
+            <b>Speed</b><span id="loading-speed">0.00 MB/s</span>
+          </div>
+          <div class="stat">
+            <b>Files</b><span id="loading-files">0 / 47</span>
+          </div>
+          <div class="stat">
+            <b>Elapsed</b><span id="loading-elapsed">0.0s</span>
+          </div>
+        </div>
+        <div id="loading-tip">
+          Hotkeys: ALT+/ for manual save tools, ALT+, for FPS, and ALT+. for
+          render scale.
+        </div>
+      </div>
+    </div>
+    <div id="mobile">
+      This WebGL build is tuned for desktop browsers. Mobile support is limited
+      and may not launch correctly.
+    </div>
+    <canvas id="unity-canvas"></canvas>
+    <section id="fps-panel" class="hud hide" aria-hidden="true">
+      <div class="fps-shell"><span id="fps-readout">0 FPS</span></div>
+    </section>
+    <section id="save-panel" class="hud hide" aria-hidden="true">
+      <div class="actions">
+        <button id="import-btn" class="secondary" type="button">
+          Import Save</button
+        ><button id="export-btn" type="button">Export Save</button>
+      </div>
+    </section>
+    <section id="perf-panel" class="hud hide" aria-hidden="true">
+      <div class="head"><h2>Render Scale</h2></div>
+      <div class="slider">
+        <span>Current</span><strong id="scale-value">100%</strong>
+      </div>
+      <input
+        id="scale-slider"
+        type="range"
+        min="25"
+        max="100"
+        step="1"
+        value="100"
+      />
+    </section>
+    <div id="toast" aria-live="polite"></div>
+    <input
+      id="import-file"
+      type="file"
+      accept=".json,.txt,.dat,application/json"
+      hidden
+    />
+    <script>
+      // Source of all game assets: pulled from the Bobert-of-Robert/hk-web-test
+      // GitHub repository via the jsDelivr GitHub CDN.
+      const REPO_BASE =
+        "https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hk-web-test@main/";
+      const assetUrl = (path) => `${REPO_BASE}${path}`;
+
+      const BYTES_PER_MEGABYTE = 1048576;
+      const getElement = (id) => document.getElementById(id);
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+      const formatMegabytes = (bytes) =>
+        `${(bytes / BYTES_PER_MEGABYTE).toFixed(2)} MB`;
+      const formatMegabytesPerSecond = (bytes) =>
+        `${(bytes / BYTES_PER_MEGABYTE).toFixed(2)} MB/s`;
+      const formatSeconds = (milliseconds) =>
+        `${(milliseconds / 1000).toFixed(1)}s`;
+
+      const ui = {
+        loading: getElement("loading-screen"),
+        phase: getElement("loading-phase"),
+        percent: getElement("loading-percent"),
+        bar: getElement("loading-bar"),
+        downloaded: getElement("loading-downloaded"),
+        speed: getElement("loading-speed"),
+        files: getElement("loading-files"),
+        elapsed: getElement("loading-elapsed"),
+        tip: getElement("loading-tip"),
+        canvas: getElement("unity-canvas"),
+        mobile: getElement("mobile"),
+        fpsPanel: getElement("fps-panel"),
+        fpsReadout: getElement("fps-readout"),
+        savePanel: getElement("save-panel"),
+        perfPanel: getElement("perf-panel"),
+        scale: getElement("scale-slider"),
+        scaleValue: getElement("scale-value"),
+        toast: getElement("toast"),
+        importBtn: getElement("import-btn"),
+        exportBtn: getElement("export-btn"),
+        file: getElement("import-file"),
+      };
+
+      const TOTAL_MB = 912.81;
+      const TOTAL_BYTES = Math.round(TOTAL_MB * BYTES_PER_MEGABYTE);
+      const TOTAL_PARTS = 47;
+      const IMPORTED_SCALE_KEY = "hk-imported-render-scale";
+      const LOAD_REFRESH_MS = 250;
+
+      let savedScale = 100;
+      try {
+        const rawScale = localStorage.getItem(IMPORTED_SCALE_KEY);
+        if (rawScale !== null) {
+          const s = Number(rawScale);
+          if (Number.isFinite(s)) savedScale = clamp(s, 25, 100);
+        }
+        localStorage.removeItem(IMPORTED_SCALE_KEY);
+        localStorage.removeItem("hk-performance-scale");
+      } catch (_) {}
+      const state = {
+        bytes: 0,
+        parts: 0,
+        speed: 0,
+        last: performance.now(),
+        lastBytes: 0,
+        start: performance.now(),
+        stage: "download",
+        boot: 0,
+        save: false,
+        fps: false,
+        perf: false,
+        scale: savedScale / 100,
+        inst: null,
+        toastTimer: 0,
+        fpsStarted: false,
+      };
+      const fpsCounter = { last: performance.now(), elapsed: 0, frames: 0 };
+      let loadRefreshQueued = false;
+      ui.scale.value = String(savedScale);
+
+      function setPanelVisible(element, isVisible) {
+        element.classList.toggle("hide", !isVisible);
+        element.setAttribute("aria-hidden", String(!isVisible));
+      }
+      function showToast(message) {
+        clearTimeout(state.toastTimer);
+        ui.toast.textContent = message;
+        ui.toast.classList.add("show");
+        state.toastTimer = setTimeout(
+          () => ui.toast.classList.remove("show"),
+          1900,
+        );
+      }
+      function updateScaleLabel() {
+        ui.scaleValue.textContent = `${Math.round(state.scale * 100)}%`;
+      }
+      function getActiveScale() {
+        return state.scale;
+      }
+      function applyScale() {
+        const s = getActiveScale(),
+          w = Math.max(1, Math.floor(innerWidth * s)),
+          h = Math.max(1, Math.floor(innerHeight * s));
+        if (ui.canvas.width !== w) ui.canvas.width = w;
+        if (ui.canvas.height !== h) ui.canvas.height = h;
+        ui.canvas.style.width = "100vw";
+        ui.canvas.style.height = "100vh";
+        const mod = state.inst && state.inst.Module;
+        if (mod && typeof mod.setCanvasSize === "function")
+          try {
+            mod.setCanvasSize(w, h);
+          } catch (_) {}
+      }
+      function toggleSave(force, silent) {
+        const on = typeof force === "boolean" ? force : !state.save;
+        state.save = on;
+        setPanelVisible(ui.savePanel, on);
+        if (!silent)
+          showToast(
+            on ? "Manual save tools opened." : "Manual save tools hidden.",
+          );
+      }
+      function toggleFps(force, silent) {
+        const on = typeof force === "boolean" ? force : !state.fps;
+        state.fps = on;
+        setPanelVisible(ui.fpsPanel, on);
+        if (!silent) showToast(on ? "FPS shown." : "FPS hidden.");
+      }
+      function togglePerf(force, silent) {
+        const on = typeof force === "boolean" ? force : !state.perf;
+        state.perf = on;
+        setPanelVisible(ui.perfPanel, on);
+        updateScaleLabel();
+        if (!silent)
+          showToast(
+            on
+              ? "Render scale controls shown."
+              : "Render scale controls hidden.",
+          );
+      }
+      function getLoadProgress() {
+        const d = Math.min(state.bytes / TOTAL_BYTES, 1);
+        if (state.stage === "download") return d * 0.88;
+        if (state.stage === "assemble") return 0.9;
+        if (state.stage === "loader") return 0.94;
+        if (state.stage === "engine") return 0.94 + state.boot * 0.06;
+        return 1;
+      }
+      function scheduleLoadingRefresh() {
+        if (loadRefreshQueued) return;
+        loadRefreshQueued = true;
+        requestAnimationFrame(() => {
+          loadRefreshQueued = false;
+          refreshLoadingUi();
+        });
+      }
+      function refreshLoadingUi() {
+        const now = performance.now(),
+          dt = (now - state.last) / 1000;
+        if (dt >= 0.25) {
+          state.speed = (state.bytes - state.lastBytes) / dt;
+          state.last = now;
+          state.lastBytes = state.bytes;
+        }
+        const p = getLoadProgress();
+        ui.bar.style.width = `${Math.max(p * 100, p ? 2 : 0)}%`;
+        ui.percent.textContent = `${Math.round(p * 100)}%`;
+        ui.downloaded.textContent = `${formatMegabytes(state.bytes)} / ${TOTAL_MB.toFixed(2)} MB`;
+        ui.speed.textContent = formatMegabytesPerSecond(state.speed);
+        ui.files.textContent = `${state.parts} / ${TOTAL_PARTS}`;
+        ui.elapsed.textContent = formatSeconds(now - state.start);
+      }
+      const loadingTicker = setInterval(
+        scheduleLoadingRefresh,
+        LOAD_REFRESH_MS,
+      );
+      function hideLoader() {
+        state.stage = "done";
+        refreshLoadingUi();
+        clearInterval(loadingTicker);
+        document.body.classList.add("game-live");
+        ui.loading.classList.add("hide");
+        setTimeout(() => ui.loading && ui.loading.remove(), 500);
+      }
+
+      function fpsLoop() {
+        const now = performance.now(),
+          ms = now - fpsCounter.last;
+        fpsCounter.last = now;
+        if (ms > 0) {
+          fpsCounter.elapsed += ms;
+          fpsCounter.frames += 1;
+          if (fpsCounter.elapsed >= 500) {
+            ui.fpsReadout.textContent = `${Math.round((fpsCounter.frames * 1000) / fpsCounter.elapsed)} FPS`;
+            fpsCounter.elapsed = 0;
+            fpsCounter.frames = 0;
+          }
+        }
+        requestAnimationFrame(fpsLoop);
+      }
+      function startFps() {
+        if (state.fpsStarted) return;
+        state.fpsStarted = true;
+        requestAnimationFrame(fpsLoop);
+      }
+
+      function getDownloadConcurrency(totalParts) {
+        const connection =
+          navigator.connection ||
+          navigator.mozConnection ||
+          navigator.webkitConnection;
+        let limit;
+        if (connection && connection.saveData) limit = 3;
+        else if (connection && /2g/.test(connection.effectiveType || ""))
+          limit = 3;
+        else if (connection && connection.effectiveType === "3g") limit = 4;
+        else
+          limit = clamp(
+            Math.round((navigator.hardwareConcurrency || 8) * 1.25),
+            6,
+            12,
+          );
+        return Math.max(1, Math.min(totalParts, limit));
+      }
+      async function fetchText(url) {
+        const r = await fetch(url, { cache: "force-cache" });
+        if (!r.ok) throw new Error(`Failed to fetch ${url} (${r.status})`);
+        return r.text();
+      }
+      async function fetchBuildPart(url) {
+        const r = await fetch(url, { cache: "force-cache" });
+        if (!r.ok) throw new Error(`Failed to fetch ${url} (${r.status})`);
+        if (!r.body || typeof r.body.getReader !== "function") {
+          const b = await r.blob();
+          state.bytes += b.size;
+          state.parts++;
+          scheduleLoadingRefresh();
+          return b;
+        }
+        const rd = r.body.getReader(),
+          chunks = [];
+        while (true) {
+          const { done, value } = await rd.read();
+          if (done) break;
+          if (value) {
+            state.bytes += value.length;
+            chunks.push(value);
+            scheduleLoadingRefresh();
+          }
+        }
+        state.parts++;
+        scheduleLoadingRefresh();
+        return new Blob(chunks);
+      }
+      async function mergeBuildParts(
+        paths,
+        limit = getDownloadConcurrency(paths.length),
+      ) {
+        const blobs = new Array(paths.length);
+        let cursor = 0;
+        await Promise.all(
+          Array.from({ length: Math.min(limit, paths.length) }, async () => {
+            while (true) {
+              const current = cursor++;
+              if (current >= paths.length) break;
+              blobs[current] = await fetchBuildPart(paths[current]);
+            }
+          }),
+        );
+        return URL.createObjectURL(new Blob(blobs));
+      }
+      const buildPartList = (base, start, end) =>
+        Array.from({ length: end - start + 1 }, (_, index) =>
+          assetUrl(`${base}.part${start + index}`),
+        );
+
+      function showFatalError(phase, tip, message, display, error) {
+        if (error) console.error(error);
+        ui.phase.textContent = phase;
+        ui.tip.textContent = tip;
+        showToast(message);
+        alert(display);
+      }
+      function exportSave() {
+        const open = indexedDB.open("/idbfs");
+        open.onerror = (e) => {
+          console.error(e);
+          showToast("Save export failed.");
+        };
+        open.onsuccess = (e) => {
+          const db = e.target.result,
+            tx = db.transaction("FILE_DATA", "readonly"),
+            store = tx.objectStore("FILE_DATA"),
+            vals = store.getAll(),
+            keys = store.getAllKeys();
+          vals.onerror = keys.onerror = (err) => {
+            console.error(err);
+            showToast("Save export failed.");
+          };
+          vals.onsuccess = () => {
+            keys.onsuccess = () => {
+              const v = vals.result || [],
+                k = keys.result || [];
+              if (!k.length) {
+                showToast("No save data was found to export.");
+                return;
+              }
+              const out = k.map((key, i) => {
+                  let c = v[i].contents;
+                  if (c instanceof Int8Array) c = Array.from(c);
+                  return {
+                    key,
+                    value: {
+                      timestamp: v[i].timestamp,
+                      mode: v[i].mode,
+                      contents: c,
+                    },
+                  };
+                }),
+                payload = {
+                  renderScale: Math.round(state.scale * 100),
+                  entries: out,
+                };
+              const blob = new Blob([JSON.stringify(payload, null, 2)], {
+                  type: "application/json",
+                }),
+                url = URL.createObjectURL(blob),
+                a = document.createElement("a");
+              a.href = url;
+              a.download = "hk-save.json";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+              showToast("Save exported to hk-save.json.");
+            };
+          };
+        };
+      }
+      function importSave(file) {
+        const reader = new FileReader();
+        reader.onerror = (e) => {
+          console.error(e);
+          showToast("Could not read that save file.");
+          ui.file.value = "";
+        };
+        reader.onload = () => {
+          let entries,
+            importedScale = null;
+          try {
+            const parsed = JSON.parse(String(reader.result));
+            if (Array.isArray(parsed)) entries = parsed;
+            else if (parsed && Array.isArray(parsed.entries)) {
+              entries = parsed.entries;
+              if (Number.isFinite(+parsed.renderScale))
+                importedScale = clamp(+parsed.renderScale, 25, 100);
+            } else throw new Error("Invalid save format");
+          } catch (err) {
+            console.error(err);
+            showToast("That file is not a valid Hollow Knight save export.");
+            ui.file.value = "";
+            return;
+          }
+          const open = indexedDB.open("/idbfs");
+          open.onerror = (e) => {
+            console.error(e);
+            showToast("Save import failed.");
+            ui.file.value = "";
+          };
+          open.onsuccess = (e) => {
+            const db = e.target.result,
+              tx = db.transaction("FILE_DATA", "readwrite"),
+              store = tx.objectStore("FILE_DATA"),
+              keys = store.getAllKeys();
+            keys.onerror = (err) => {
+              console.error(err);
+              showToast("Save import failed.");
+              ui.file.value = "";
+            };
+            keys.onsuccess = (ev) => {
+              const k = ev.target.result || [];
+              if (!k.length) {
+                showToast("Open the game once before importing a save.");
+                ui.file.value = "";
+                return;
+              }
+              const hash = String(k[0]).split("/")[2];
+              k.forEach((key) => {
+                if (!String(key).includes(hash)) store.delete(key);
+              });
+              entries.forEach((entry) => {
+                const raw = String(entry && entry.key ? entry.key : "");
+                if (!raw) return;
+                const value = entry && entry.value ? entry.value : {},
+                  parts = raw.split("/");
+                if (parts.length > 2) parts[2] = hash;
+                let c = value.contents;
+                if (Array.isArray(c)) c = Int8Array.from(c);
+                else if (
+                  c &&
+                  typeof c === "object" &&
+                  !(c instanceof Int8Array)
+                ) {
+                  const idx = Object.keys(c)
+                      .map(Number)
+                      .filter(Number.isFinite)
+                      .sort((a, b) => a - b),
+                    arr = new Int8Array(
+                      idx.length ? idx[idx.length - 1] + 1 : 0,
+                    );
+                  idx.forEach((i) => (arr[i] = c[i]));
+                  c = arr;
+                }
+                store.put(
+                  {
+                    timestamp: value.timestamp
+                      ? new Date(value.timestamp)
+                      : new Date(),
+                    mode: value.mode,
+                    contents: c,
+                  },
+                  parts.join("/"),
+                );
+              });
+              tx.oncomplete = () => {
+                if (importedScale !== null) {
+                  state.scale = importedScale / 100;
+                  ui.scale.value = String(importedScale);
+                  updateScaleLabel();
+                  applyScale();
+                  try {
+                    localStorage.setItem(
+                      IMPORTED_SCALE_KEY,
+                      String(importedScale),
+                    );
+                    localStorage.removeItem("hk-performance-scale");
+                  } catch (_) {}
+                }
+                showToast(
+                  importedScale !== null
+                    ? `Save imported. Render scale restored to ${importedScale}%. Refresh the page to use it.`
+                    : "Save imported. Refresh the page to use it.",
+                );
+                ui.file.value = "";
+              };
+              tx.onerror = (err) => {
+                console.error(err);
+                showToast("Save import failed.");
+                ui.file.value = "";
+              };
+            };
+          };
+        };
+        reader.readAsText(file);
+      }
+
+      ui.importBtn.onclick = () => ui.file.click();
+      ui.exportBtn.onclick = exportSave;
+      ui.file.onchange = () => {
+        const file = ui.file.files && ui.file.files[0];
+        if (file) importSave(file);
+      };
+      ui.scale.oninput = (e) => {
+        const pct = clamp(+e.target.value || 100, 25, 100);
+        state.scale = pct / 100;
+        updateScaleLabel();
+        applyScale();
+      };
+      document.addEventListener(
+        "keydown",
+        (e) => {
+          if (!e.altKey || e.repeat) return;
+          if (e.code === "Slash") {
+            e.preventDefault();
+            toggleSave();
+          } else if (e.code === "Comma") {
+            e.preventDefault();
+            toggleFps();
+          } else if (e.code === "Period") {
+            e.preventDefault();
+            togglePerf();
+          }
+        },
+        true,
+      );
+      addEventListener("resize", applyScale, { passive: true });
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        const m = document.createElement("meta");
+        m.name = "viewport";
+        m.content =
+          "width=device-width,height=device-height,initial-scale=1,user-scalable=no,shrink-to-fit=yes";
+        document.head.appendChild(m);
+        ui.mobile.classList.add("show");
+        setTimeout(() => ui.mobile.classList.remove("show"), 5000);
+      }
+
+      toggleSave(false, true);
+      toggleFps(false, true);
+      togglePerf(false, true);
+      updateScaleLabel();
+      applyScale();
+      scheduleLoadingRefresh();
+
+      (async () => {
+        let loaderBlobUrl = null;
+        try {
+          ui.phase.textContent = "Downloading build chunks...";
+          scheduleLoadingRefresh();
+          const loaderSourcePromise = fetchText(
+            assetUrl("Build/hktruffled.loader.js"),
+          );
+          const [dataUrl, wasmUrl, loaderSource] = await Promise.all([
+            mergeBuildParts(buildPartList("Build/hktruffled.data", 1, 45)),
+            mergeBuildParts(buildPartList("Build/hktruffled.wasm", 1, 2), 2),
+            loaderSourcePromise,
+          ]);
+          state.stage = "assemble";
+          ui.phase.textContent =
+            "Reassembling data and WebAssembly packages...";
+          scheduleLoadingRefresh();
+          loaderBlobUrl = URL.createObjectURL(
+            new Blob([loaderSource], { type: "text/javascript" }),
+          );
+          const sc = document.createElement("script");
+          sc.src = loaderBlobUrl;
+          sc.async = true;
+          sc.fetchPriority = "high";
+          sc.onload = () => {
+            URL.revokeObjectURL(loaderBlobUrl);
+            state.stage = "engine";
+            state.boot = 0;
+            ui.phase.textContent = "Initializing the Unity runtime...";
+            scheduleLoadingRefresh();
+            const cfg = {
+              dataUrl,
+              frameworkUrl: assetUrl("Build/hktruffled.framework.js"),
+              codeUrl: wasmUrl,
+              streamingAssetsUrl: assetUrl("StreamingAssets"),
+              companyName: "Team Cherry",
+              productName: "Hollow Knight",
+              productVersion: "1.0",
+              memory: 384 * 1024 * 1024,
+              useWebGL2: true,
+              matchWebGLToCanvasSize: false,
+              cacheControl: (url) =>
+                url.startsWith("blob:") ? "no-store" : "must-revalidate",
+              webglContextAttributes: {
+                antialias: false,
+                alpha: false,
+                depth: true,
+                stencil: false,
+                premultipliedAlpha: false,
+                preserveDrawingBuffer: false,
+                desynchronized: true,
+                powerPreference: "high-performance",
+                failIfMajorPerformanceCaveat: false,
+              },
+            };
+            createUnityInstance(ui.canvas, cfg, (p) => {
+              state.boot = p;
+              scheduleLoadingRefresh();
+            })
+              .then((inst) => {
+                state.inst = inst;
+                applyScale();
+                startFps();
+                hideLoader();
+                showToast(
+                  "Hotkeys ready: ALT+/ saves, ALT+, FPS, ALT+. render scale.",
+                );
+              })
+              .catch((err) =>
+                showFatalError(
+                  "Initialization failed",
+                  "The engine could not start. Check the console for details and try reloading.",
+                  "Unity failed to initialize.",
+                  err && err.message ? err.message : String(err),
+                  err,
+                ),
+              );
+          };
+          sc.onerror = () => {
+            if (loaderBlobUrl) URL.revokeObjectURL(loaderBlobUrl);
+            showFatalError(
+              "Bootstrap failed",
+              "The Unity loader script could not be downloaded. Try refreshing the page.",
+              "Loader download failed.",
+              "Failed to load Build/hktruffled.loader.js",
+            );
+          };
+          state.stage = "loader";
+          ui.phase.textContent = "Loading engine bootstrap...";
+          scheduleLoadingRefresh();
+          document.body.appendChild(sc);
+        } catch (err) {
+          if (loaderBlobUrl) URL.revokeObjectURL(loaderBlobUrl);
+          showFatalError(
+            "Loading failed",
+            "The game files could not be prepared. Check the console for details and retry.",
+            "Game download failed.",
+            err && err.message ? err.message : String(err),
+            err,
+          );
+        }
+      })();
+    </script>
+  </body>
+</html>
