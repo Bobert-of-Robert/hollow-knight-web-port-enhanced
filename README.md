@@ -5,4 +5,5 @@ An enhanced version of the Hollow Knight web port fork by HorizonOfficia https:/
 - Improved initial loading screen that shows relevant information
 
 I hope to eventually fix Grimm & NKG.
+
 Use hk-web-enhanced.html for these enhancements.
