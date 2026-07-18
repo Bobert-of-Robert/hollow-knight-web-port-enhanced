@@ -1,20 +1,24 @@
 <!doctype html>
 <html lang="en-us">
   <head>
-    <base
-      href="https://cdn.jsdelivr.net/gh/HorizonOfficia/hollow-knight@latest/"
-    />
+    <base href="./" />
     <meta charset="utf-8" />
     <title>Hollow Knight</title>
     <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       rel="preload"
-      href="Build/hktruffled.loader.js"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hollow-knight-web-port-enhanced@main/Build/hktruffled.loader.js"
       as="script"
       fetchpriority="high"
+      crossorigin
     />
-    <link rel="preload" href="Build/hktruffled.framework.js" as="script" />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hollow-knight-web-port-enhanced@main/Build/hktruffled.framework.js"
+      as="script"
+      crossorigin
+    />
     <style>
       :root {
         --bg: #05080f;
@@ -456,10 +460,30 @@
     </style>
   </head>
   <body>
-    <link rel="preload" href="sharedassets8.resource" as="fetch" />
-    <link rel="preload" href="sharedassets127.resource" as="fetch" />
-    <link rel="preload" href="sharedassets400.resource" as="fetch" />
-    <link rel="preload" href="sharedassets410.resource" as="fetch" />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hollow-knight-web-port-enhanced@main/sharedassets8.resource"
+      as="fetch"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hollow-knight-web-port-enhanced@main/sharedassets127.resource"
+      as="fetch"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hollow-knight-web-port-enhanced@main/sharedassets400.resource"
+      as="fetch"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hollow-knight-web-port-enhanced@main/sharedassets410.resource"
+      as="fetch"
+      crossorigin
+    />
     <div id="loading-screen">
       <div class="card">
         <h1>Hollow Knight</h1>
@@ -530,6 +554,13 @@
       hidden
     />
     <script>
+      // Source of all game assets: pulled from the
+      // Bobert-of-Robert/hollow-knight-web-port-enhanced GitHub repository
+      // via the jsDelivr GitHub CDN.
+      const REPO_BASE =
+        "https://cdn.jsdelivr.net/gh/Bobert-of-Robert/hollow-knight-web-port-enhanced@main/";
+      const assetUrl = (path) => `${REPO_BASE}${path}`;
+
       const BYTES_PER_MEGABYTE = 1048576;
       const getElement = (id) => document.getElementById(id);
       const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -793,9 +824,8 @@
         return URL.createObjectURL(new Blob(blobs));
       }
       const buildPartList = (base, start, end) =>
-        Array.from(
-          { length: end - start + 1 },
-          (_, index) => `${base}.part${start + index}`,
+        Array.from({ length: end - start + 1 }, (_, index) =>
+          assetUrl(`${base}.part${start + index}`),
         );
 
       function showFatalError(phase, tip, message, display, error) {
@@ -1030,7 +1060,9 @@
         try {
           ui.phase.textContent = "Downloading build chunks...";
           scheduleLoadingRefresh();
-          const loaderSourcePromise = fetchText("Build/hktruffled.loader.js");
+          const loaderSourcePromise = fetchText(
+            assetUrl("Build/hktruffled.loader.js"),
+          );
           const [dataUrl, wasmUrl, loaderSource] = await Promise.all([
             mergeBuildParts(buildPartList("Build/hktruffled.data", 1, 45)),
             mergeBuildParts(buildPartList("Build/hktruffled.wasm", 1, 2), 2),
@@ -1055,9 +1087,9 @@
             scheduleLoadingRefresh();
             const cfg = {
               dataUrl,
-              frameworkUrl: "Build/hktruffled.framework.js",
+              frameworkUrl: assetUrl("Build/hktruffled.framework.js"),
               codeUrl: wasmUrl,
-              streamingAssetsUrl: "StreamingAssets",
+              streamingAssetsUrl: assetUrl("StreamingAssets"),
               companyName: "Team Cherry",
               productName: "Hollow Knight",
               productVersion: "1.0",
