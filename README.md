@@ -1,4 +1,4 @@
-This is an enhanced version of already existing Hollow Knight web ports and adds
+This is an enhanced version of an already existing Hollow Knight web port and adds
 - A save managed allowing saves to be imported and exported accessible by pressing ALT+/
 - A render scale slider allowing for better performance on lower spec machines like a Chromebook accessible by pressing ALT+.
 - A FPS counter toggleable by pressing ALT+,
